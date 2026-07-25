@@ -2,6 +2,8 @@ from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File
 
+from app.services.parser_service import extract_resume_text
+
 router = APIRouter(
     prefix="/upload",
     tags=["Upload"]
@@ -18,7 +20,9 @@ async def upload_resume(file: UploadFile = File(...)):
     with open(destination, "wb") as buffer:
         buffer.write(await file.read())
 
+    text = extract_resume_text(str(destination))
+
     return {
         "filename": file.filename,
-        "saved_to": str(destination)
+        "text": text
     }
