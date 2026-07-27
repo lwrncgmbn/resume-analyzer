@@ -12,6 +12,6 @@ router = APIRouter(
 @router.post("/")
 async def analyze(data: AnalyzeRequest):
     return analyze_resume(
-        data.resume,
+        data.resume_text,
         data.job_description
     )

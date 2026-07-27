@@ -24,5 +24,8 @@ async def upload_resume(file: UploadFile = File(...)):
 
     return {
         "filename": file.filename,
-        "text": text
+        "resume_text": text
     }
+
+
+
