@@ -32,16 +32,24 @@ from app.schemas.analyze import AnalyzeResponse
 # from app.data.skills import SKILLS
 from app.data.skills import SKILLS, SKILL_INFO
 
+from app.utils.text import clean_text
+
+from app.utils.experience import extract_years
 
 def analyze_resume(resume: str, job_description: str):
 
-    resume = resume.lower()
-    job_description = job_description.lower()
+    # resume = resume.lower()
+    # job_description = job_description.lower()
+
+    resume = clean_text(resume)
+    job_description = clean_text(job_description)
 
     strengths = set()
     missing_skills = set()
 
     skill_breakdown = {}
+
+    experience = {}
 
     earned_points = 0
     possible_points = 0
@@ -54,6 +62,11 @@ def analyze_resume(resume: str, job_description: str):
         for skill in skills:
 
             aliases = SKILL_INFO[skill]["aliases"]
+
+            years = extract_years(resume, aliases)
+
+            if years > 0:
+                experience[SKILL_INFO[skill]["display"]] = years
 
             job_has_skill = any(
                 alias in job_description
@@ -71,10 +84,18 @@ def analyze_resume(resume: str, job_description: str):
                 weight = SKILL_INFO[skill]["weight"]
                 possible_points += weight
 
+                years = extract_years(resume, aliases)
+
                 if resume_has_skill:
-                    earned_points += weight
+                    bonus = min(years, 5) * 0.2
+
+                    earned_points += weight + bonus
+
                     strengths.add(SKILL_INFO[skill]["display"])
                     matched.append(SKILL_INFO[skill]["display"])
+
+                    if years > 0:
+                        experience[SKILL_INFO[skill]["display"]] = years
                 else:
                     missing_skills.add(SKILL_INFO[skill]["display"])
                     missing.append(SKILL_INFO[skill]["display"])
@@ -86,7 +107,10 @@ def analyze_resume(resume: str, job_description: str):
 
     if strengths or missing_skills:
         match_score = (
-            int((earned_points / possible_points) * 100)
+            min(
+                int((earned_points / possible_points) * 100),
+                100
+            )
             if possible_points
             else 0
         )
@@ -124,11 +148,24 @@ def analyze_resume(resume: str, job_description: str):
         f"while missing {', '.join(missing_skills) if missing_skills else 'no required skills'}."
     )
     
+    # return AnalyzeResponse(
+    #     match_score=match_score,
+    #     strengths=strengths,
+    #     missing_skills=missing_skills,
+    #     skill_breakdown=skill_breakdown,
+    #     recommendations=recommendations,
+    #     summary=summary
+    # )
+
+    suggested_keywords = missing_skills.copy()
+
     return AnalyzeResponse(
         match_score=match_score,
         strengths=strengths,
         missing_skills=missing_skills,
         skill_breakdown=skill_breakdown,
+        experience=experience,
         recommendations=recommendations,
+        suggested_keywords=suggested_keywords,
         summary=summary
     )

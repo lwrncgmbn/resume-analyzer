@@ -5,11 +5,21 @@ class AnalyzeRequest(BaseModel):
     resume_text: str
     job_description: str
 
+# class AnalyzeResponse(BaseModel):
+#     match_score: int
+#     strengths: list[str]
+#     missing_skills: list[str]
+#     skill_breakdown: dict[str, dict[str, list[str]]]
+#     recommendations: list[str]
+#     summary: str
 
 class AnalyzeResponse(BaseModel):
     match_score: int
     strengths: list[str]
     missing_skills: list[str]
-    skill_breakdown: dict[str, dict[str, list[str]]]
+    skill_breakdown: dict
+    experience: dict[str, int]
     recommendations: list[str]
     summary: str
+    suggested_keywords: list[str]
+    certifications: list[str]
